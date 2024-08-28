@@ -35,6 +35,6 @@ while run:
         window.blit(slime_image, slime.topleft)
         for obj in objects:
             if slime.colliderect(obj):
-                obj.y_vel = -obj.y_vel * 1
+                obj.y_vel = -obj.y_vel * 0.7
     pg.display.update()
 pg.quit()
