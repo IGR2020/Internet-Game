@@ -1,12 +1,13 @@
 import pygame as pg, random, os
 class Player(pg.Rect):
-    def __init__(self, x: int, y: int, move_left, move_right, idle): _, self.leftImage, self.rightImage, self.idleImage, self.x_vel, self.y_vel, self.image = super().__init__(x, y, item_size, item_size*2), move_left, move_right, idle, 0, 0, idle
+    def __init__(self, x: int, y: int, move_left, move_right, idle): _, self.leftImage, self.rightImage, self.idleImage, self.x_vel, self.y_vel, self.image, self.jump_count = super().__init__(x, y, item_size, item_size*2), move_left, move_right, idle, 0, 0, idle, 0
     def display(self, window): window.blit(player_assets[self.image], self)
     def script(self):
         keys, self.x_vel = pg.key.get_pressed(), 0
         if keys[pg.K_a]: self.x_vel -= 2
         if keys[pg.K_d]: self.x_vel += 2
-        self.x, self.y = self.x + self.x_vel, self.y + self.y_vel
+        self.x, self.y, self.y_vel = self.x + self.x_vel, min(self.y + self.y_vel, window_height-item_size*2), self.y_vel + 0.2
+        if self.y >= window_height-item_size*2: self.jump_count = 0
         if self.x_vel > 0: self.image = self.rightImage
         elif self.x_vel < 0: self.image = self.leftImage
         else: self.image = self.idleImage
@@ -22,19 +23,18 @@ while run:
         if event.type == pg.QUIT: run = False
         if event.type == pg.MOUSEBUTTONDOWN: 
             x, y = pg.mouse.get_pos()
-            if event.button != 3: 
-                objects.append(Item(x, y, random.choice(list(assets.keys()))))
-                random.choice(sounds).play()
+            if event.button != 3: objects.append(Item(x, y, random.choice(list(assets.keys())))), random.choice(sounds).play()
             if event.button == 3: slime_blocks.append(Item((x // item_size)*item_size, (y// item_size)*item_size, None)), slime_sound.play()
         if event.type == pg.VIDEORESIZE: window_width, window_height = event.dict["size"]
+        if event.type == pg.KEYDOWN and event.key == pg.K_SPACE and player.jump_count == 0: player.y_vel, player.jump_count = -5, 1
     window.fill((30, 30, 30)),  clock.tick(60), player.display(window), player.script()
     for obj in objects:
-        if obj.bottom < window_height: obj.y_vel += 0.2 
-        else: obj.y_vel = 0
         if player.colliderect(obj): oof_sound.play(), objects.remove(obj)
-        obj.y , _ = obj.y + obj.y_vel, window.blit(assets[obj.name], obj)
+        obj.y, obj.y_vel, _ = min(obj.y + obj.y_vel, window_height-item_size), obj.y_vel + 0.2, window.blit(assets[obj.name], obj)
     for slime in slime_blocks: 
         window.blit(slime_image, slime.topleft)
+        if player.colliderect(slime): player.x = player.x - player.x_vel
+        if player.colliderect(slime) and not player.x >= window_height-item_size*2: player.y_vel, player.jump_count =  -player.y_vel * 0.6, 0
         for obj in objects: 
             if slime.colliderect(obj): obj.y_vel = -obj.y_vel * 0.7
     pg.display.update()
