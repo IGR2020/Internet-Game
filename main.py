@@ -39,3 +39,4 @@ while run:
             if slime.colliderect(obj): obj.y_vel = -obj.y_vel * 0.7
     pg.display.update()
 pg.quit()
+quit()
